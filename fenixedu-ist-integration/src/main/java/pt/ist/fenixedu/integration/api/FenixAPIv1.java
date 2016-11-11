@@ -38,14 +38,7 @@ import javax.servlet.ServletContext;
 import javax.servlet.UnavailableException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import javax.ws.rs.GET;
-import javax.ws.rs.POST;
-import javax.ws.rs.PUT;
-import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
-import javax.ws.rs.Produces;
-import javax.ws.rs.QueryParam;
-import javax.ws.rs.WebApplicationException;
+import javax.ws.rs.*;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
@@ -155,23 +148,11 @@ import pt.ist.fenixedu.integration.api.beans.FenixPerson.FenixPhoto;
 import pt.ist.fenixedu.integration.api.beans.FenixPerson.FenixRole;
 import pt.ist.fenixedu.integration.api.beans.FenixPersonCourses;
 import pt.ist.fenixedu.integration.api.beans.FenixPersonCourses.FenixEnrolment;
-import pt.ist.fenixedu.integration.api.beans.publico.FenixAbout;
-import pt.ist.fenixedu.integration.api.beans.publico.FenixCourseEvaluation;
-import pt.ist.fenixedu.integration.api.beans.publico.FenixCourseExtended;
+import pt.ist.fenixedu.integration.api.beans.publico.*;
 import pt.ist.fenixedu.integration.api.beans.publico.FenixCourseExtended.FenixCompetence;
 import pt.ist.fenixedu.integration.api.beans.publico.FenixCourseExtended.FenixCompetence.BiblioRef;
-import pt.ist.fenixedu.integration.api.beans.publico.FenixCourseGroup;
-import pt.ist.fenixedu.integration.api.beans.publico.FenixCourseStudents;
-import pt.ist.fenixedu.integration.api.beans.publico.FenixDegree;
-import pt.ist.fenixedu.integration.api.beans.publico.FenixDegreeExtended;
 import pt.ist.fenixedu.integration.api.beans.publico.FenixDegreeExtended.FenixDegreeInfo;
 import pt.ist.fenixedu.integration.api.beans.publico.FenixDegreeExtended.FenixTeacher;
-import pt.ist.fenixedu.integration.api.beans.publico.FenixDomainModel;
-import pt.ist.fenixedu.integration.api.beans.publico.FenixExecutionCourse;
-import pt.ist.fenixedu.integration.api.beans.publico.FenixPeriod;
-import pt.ist.fenixedu.integration.api.beans.publico.FenixRoomEvent;
-import pt.ist.fenixedu.integration.api.beans.publico.FenixSchedule;
-import pt.ist.fenixedu.integration.api.beans.publico.FenixSpace;
 import pt.ist.fenixedu.integration.api.infra.FenixAPIFromExternalServer;
 import pt.ist.fenixedu.integration.dto.PersonInformationBean;
 import pt.ist.fenixedu.integration.service.services.externalServices.CreatePreEnrolment;
@@ -1571,6 +1552,38 @@ public class FenixAPIv1 {
     public FenixSchedule scheduleCoursesByOid(@PathParam("id") String oid) {
         ExecutionCourse executionCourse = getDomainObject(oid, ExecutionCourse.class);
         return new FenixSchedule(executionCourse);
+    }
+
+    @GET
+    @Produces(JSON_UTF8)
+    @Path("courses/{id}/lessons")
+    public List<FenixLesson> courseLessons(@PathParam("id") String oid) {
+        ExecutionCourse executionCourse = getDomainObject(oid, ExecutionCourse.class);
+        return FenixLesson.collectAllLessons(executionCourse);
+    }
+
+    @GET
+    @Produces(JSON_UTF8)
+    @Path("courses/{courseId}/lessons/{lessonId}")
+    public FenixLesson courseLessonById(@PathParam("courseId") String courseId, @PathParam("lessonId") String lessonId) {
+        ExecutionCourse executionCourse = getDomainObject(courseId, ExecutionCourse.class);
+        return FenixLesson.readById(executionCourse, lessonId);
+    }
+
+    @OAuthEndpoint(EVALUATIONS_SCOPE)
+    @PUT
+    @Produces(JSON_UTF8)
+    @Path("courses/{courseId}/lessons/{lessonId}")
+    public FenixLesson changeCourseLesson(@PathParam("courseId") String courseId, @PathParam("lessonId") String lessonId,
+            FenixLesson lesson) {
+        return lesson.write();
+    }
+
+    @DELETE
+    @Path("courses/{courseId}/lessons/{lessonId}")
+    public FenixLesson deleteCourseLessonById(@PathParam("courseId") String courseId, @PathParam("lessonId") String lessonId) {
+        ExecutionCourse executionCourse = getDomainObject(courseId, ExecutionCourse.class);
+        return FenixLesson.readById(executionCourse, lessonId).delete();
     }
 
     /**
